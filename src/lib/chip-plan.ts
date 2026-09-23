@@ -119,31 +119,47 @@ function cleanPlan(chips: number, denominations: number, target: number) {
 
 function exactPlan(chips: number, denominations: number, target: number) {
   if (denominations === 1) {
+    const value = Math.max(1, Math.round(target / chips));
     return {
-      values: [Math.max(1, Math.round(target / chips))],
+      values: [value],
       counts: [chips],
-      total: target,
+      total: value * chips,
     };
   }
 
+  let best:
+    | { values: number[]; counts: number[]; total: number; score: number }
+    | undefined;
+
   for (let start = 0; start <= NICE_VALUES.length - denominations; start += 1) {
-    const values = NICE_VALUES.slice(start, start + denominations);
-    const counts = distribute(chips, denominations);
+    const baseValues = NICE_VALUES.slice(start, start + denominations);
+    const initialCounts = distribute(chips, denominations);
     const highestIndex = denominations - 1;
-    const moved = counts[highestIndex] - 1;
-    counts[0] += moved;
-    counts[highestIndex] = 1;
-    const lowerTotal = values
-      .slice(0, highestIndex)
-      .reduce((sum, value, index) => sum + value * counts[index], 0);
-    const highest = target - lowerTotal;
-    if (highest >= values[highestIndex - 1] && highest > 0) {
+
+    for (let highCount = 1; highCount <= initialCounts[highestIndex]; highCount += 1) {
+      const counts = [...initialCounts];
+      const moved = counts[highestIndex] - highCount;
+      counts[0] += moved;
+      counts[highestIndex] = highCount;
+      const lowerTotal = baseValues
+        .slice(0, highestIndex)
+        .reduce((sum, value, index) => sum + value * counts[index], 0);
+      const remainder = target - lowerTotal;
+      if (remainder <= 0 || remainder % highCount !== 0) continue;
+      const highest = remainder / highCount;
+      if (highest < baseValues[highestIndex - 1]) continue;
+
+      const values = [...baseValues];
       values[highestIndex] = highest;
-      return { values, counts, total: target };
+      const jump = highest / baseValues[highestIndex - 1];
+      const score = Math.abs(Math.log(jump / 2.5)) + moved * 0.08;
+      if (!best || score < best.score) {
+        best = { values, counts, total: target, score };
+      }
     }
   }
 
-  return cleanPlan(chips, denominations, target);
+  return best ?? cleanPlan(chips, denominations, target);
 }
 
 export function makeChipPlan(raw: PlanInput): ChipPlan {
