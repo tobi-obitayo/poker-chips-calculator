@@ -125,7 +125,7 @@ export default function Home() {
                 transition={{ duration: 6, times: [0, 0.15, 0.8, 1], delay: 2.4 }}
                 className="rounded-full bg-ink/70 px-3 py-1.5 text-[11px] font-medium text-paper backdrop-blur"
               >
-                Drag to orbit · hover a stack for its details
+                Drag to orbit · hover or tap a stack for details
               </motion.p>
               <div className="pointer-events-auto w-full">
                 <ChipDock
@@ -144,7 +144,7 @@ export default function Home() {
         {menuOpen && (
           <motion.div
             key="menu"
-            className={`absolute inset-0 z-40 flex items-center justify-center overflow-y-auto px-4 py-20 ${
+            className={`absolute inset-0 z-40 flex overflow-y-auto px-4 pb-6 pt-20 sm:py-20 ${
               hasTable ? "bg-paper/25 backdrop-blur-md" : ""
             }`}
             initial={{ opacity: 0 }}

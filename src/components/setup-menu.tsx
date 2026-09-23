@@ -39,7 +39,7 @@ export function SetupMenu({
       animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
       exit={{ opacity: 0, y: -30, scale: 0.9, filter: "blur(18px)" }}
       transition={{ type: "spring", stiffness: 170, damping: 24, mass: 0.9 }}
-      className="liquid-glass relative w-full max-w-[560px] overflow-hidden rounded-[34px] p-5 sm:p-7"
+      className="liquid-glass relative m-auto w-full max-w-[560px] overflow-hidden rounded-[30px] p-4 sm:rounded-[34px] sm:p-7"
       aria-labelledby="setup-title"
     >
       <div className="liquid-sheen pointer-events-none absolute inset-0" />

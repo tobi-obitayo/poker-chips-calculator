@@ -50,11 +50,11 @@ export function GlassStepper({
   }
 
   return (
-    <div className="glass-well rounded-2xl p-3">
+    <div className="glass-well flex items-center justify-between gap-3 rounded-2xl px-3 py-2 sm:block sm:py-3">
       <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/45">
         {label}
       </p>
-      <div className="mt-2 flex items-center gap-1.5">
+      <div className="flex w-44 items-center gap-1.5 sm:mt-2 sm:w-auto">
         {(["minus", "plus"] as const).map((side) => {
           const isMinus = side === "minus";
           const disabled = isMinus ? value <= min : value >= max;
@@ -104,7 +104,7 @@ export function GlassStepper({
                       nudge(-1);
                     }
                   }}
-                  className="w-full min-w-0 bg-transparent text-center text-2xl font-semibold tracking-tight text-ink tabular-nums outline-none"
+                  className="w-full min-w-0 bg-transparent text-center text-xl font-semibold tracking-tight text-ink tabular-nums outline-none sm:text-2xl"
                 />
                 {suffix && <span className="text-xs font-medium text-ink/40">{suffix}</span>}
               </label>

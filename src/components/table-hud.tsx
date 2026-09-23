@@ -20,19 +20,19 @@ const rise = (delay: number) => ({
 
 export function MetricCards({ plan, input }: { plan: ChipPlan; input: PlanInput }) {
   return (
-    <div className="no-scrollbar flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:justify-center sm:px-0">
-      <motion.div {...rise(0.55)} className="glass-card min-w-[180px] snap-start rounded-2xl px-4 py-3">
+    <div className="grid grid-cols-3 gap-1.5 px-3 sm:mx-auto sm:flex sm:w-fit sm:gap-2 sm:px-0">
+      <motion.div {...rise(0.55)} className="glass-card min-w-0 rounded-2xl px-3 py-2.5 sm:min-w-[180px] sm:px-4 sm:py-3">
         <p className="metric-label">
           <span className="text-coral">1</span> Divide
         </p>
-        <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums text-ink">
+        <p className="mt-1 text-[13px] font-semibold leading-snug tracking-tight tabular-nums text-ink sm:text-lg">
           <AnimatedNumber value={input.totalChips} /> ÷ <AnimatedNumber value={input.players} /> ={" "}
           <AnimatedNumber value={plan.chipsPerPlayer} />
         </p>
-        <p className="text-[10px] text-ink/45">chips for each player</p>
+        <p className="hidden text-[10px] text-ink/45 sm:block">chips for each player</p>
       </motion.div>
 
-      <motion.div {...rise(0.65)} className="glass-card min-w-[200px] snap-start rounded-2xl px-4 py-3">
+      <motion.div {...rise(0.65)} className="glass-card min-w-0 rounded-2xl px-3 py-2.5 sm:min-w-[200px] sm:px-4 sm:py-3">
         <p className="metric-label">
           <span className="text-coral">2</span> Weight
         </p>
@@ -48,18 +48,18 @@ export function MetricCards({ plan, input }: { plan: ChipPlan; input: PlanInput 
             />
           ))}
         </div>
-        <p className="mt-1.5 text-[10px] text-ink/45">more small chips, fewer big ones</p>
+        <p className="mt-1.5 hidden text-[10px] text-ink/45 sm:block">more small chips, fewer big ones</p>
       </motion.div>
 
-      <motion.div {...rise(0.75)} className="glass-card min-w-[180px] snap-start rounded-2xl px-4 py-3">
+      <motion.div {...rise(0.75)} className="glass-card min-w-0 rounded-2xl px-3 py-2.5 sm:min-w-[180px] sm:px-4 sm:py-3">
         <p className="metric-label">
           <span className="text-coral">3</span> Price
         </p>
-        <p className="mt-1 text-lg font-semibold tracking-tight tabular-nums text-ink">
+        <p className="mt-1 text-[13px] font-semibold leading-snug tracking-tight tabular-nums text-ink sm:text-lg">
           <AnimatedNumber value={plan.chipsPerPlayer} /> chips ={" "}
           <AnimatedNumber value={plan.valuePerPlayer} format={formatMoney} />
         </p>
-        <p className="text-[10px] text-ink/45">
+        <p className="hidden text-[10px] text-ink/45 sm:block">
           {plan.isExact
             ? "exactly your buy-in"
             : `${plan.difference > 0 ? "+" : "−"}${formatMoney(Math.abs(plan.difference))} for cleaner values`}

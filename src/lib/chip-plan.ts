@@ -112,18 +112,28 @@ function improveCounts(values: number[], initial: number[], target: number) {
 
 function cleanPlan(chips: number, denominations: number, target: number) {
   const initial = distribute(chips, denominations);
-  let best: { values: number[]; counts: number[]; total: number } | undefined;
+  const candidates = [];
 
   for (let start = 0; start <= NICE_VALUES.length - denominations; start += 1) {
     const values = NICE_VALUES.slice(start, start + denominations);
     const counts = improveCounts(values, initial, target);
     const total = totalValue(values, counts);
-    if (!best || Math.abs(target - total) < Math.abs(target - best.total)) {
-      best = { values, counts, total };
-    }
+    const drift = counts.reduce((sum, count, i) => sum + Math.abs(count - initial[i]), 0);
+    candidates.push({ values, counts, total, distance: Math.abs(target - total), drift });
   }
 
-  return best!;
+  // Near-ties on total go to the stack whose smallest pile is largest (so players can make
+  // change), then to the one closest to the small-chip curve.
+  const closest = Math.min(...candidates.map((candidate) => candidate.distance));
+  const tolerance = Math.max(closest, target * 0.03);
+  return candidates
+    .filter((candidate) => candidate.distance <= tolerance)
+    .sort(
+      (a, b) =>
+        Math.min(...b.counts) - Math.min(...a.counts) ||
+        a.drift - b.drift ||
+        a.distance - b.distance,
+    )[0];
 }
 
 function exactPlan(chips: number, denominations: number, target: number) {

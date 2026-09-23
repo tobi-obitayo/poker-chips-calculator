@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import {
-  ContactShadows,
-  Environment,
-  Html,
-  Lightformer,
-  OrbitControls,
-} from "@react-three/drei";
-import { motion } from "motion/react";
+import { ContactShadows, Environment, Lightformer, OrbitControls } from "@react-three/drei";
+import { AnimatePresence, motion } from "motion/react";
 import * as THREE from "three";
 import { formatMoney, type ChipColor, type ChipPlan, type ChipStack } from "@/lib/chip-plan";
 
@@ -192,6 +186,51 @@ function makeChipFaceTexture(color: ChipColor, label: string) {
   return texture;
 }
 
+function makeSeatLabelTexture(text: string) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 160;
+  canvas.height = 80;
+  const g = canvas.getContext("2d")!;
+  g.fillStyle = "rgba(255, 255, 255, 0.9)";
+  g.beginPath();
+  g.roundRect(10, 14, 140, 52, 26);
+  g.fill();
+  g.strokeStyle = "rgba(35, 40, 38, 0.08)";
+  g.lineWidth = 2;
+  g.stroke();
+  g.fillStyle = "#3a403d";
+  g.font = "700 28px system-ui, -apple-system, Helvetica, Arial, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(text, 80, 41);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function makeDealerTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const g = canvas.getContext("2d")!;
+  g.fillStyle = "#f6f1e6";
+  g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = "#2a2f2c";
+  g.lineWidth = 6;
+  g.beginPath();
+  g.arc(128, 128, 104, 0, Math.PI * 2);
+  g.stroke();
+  g.fillStyle = "#2a2f2c";
+  g.font = "800 46px system-ui, -apple-system, Helvetica, Arial, sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText("DEALER", 128, 132);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
 function materialKey(color: ChipColor, value: number) {
   return `${color.hex}|${value}`;
 }
@@ -237,6 +276,7 @@ function ChipTooltip({ stack }: { stack: ChipStack }) {
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.92 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 6, scale: 0.96, transition: { duration: 0.12 } }}
       transition={{ type: "spring", stiffness: 420, damping: 28 }}
       className="chip-tooltip pointer-events-none w-56 rounded-2xl p-3.5 text-paper"
     >
@@ -374,17 +414,6 @@ function ChipStack3D({
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
       )}
-
-      {interactive && active && (
-        <Html
-          position={[0, height + 0.5, 0]}
-          center
-          zIndexRange={[40, 0]}
-          style={{ pointerEvents: "none" }}
-        >
-          <ChipTooltip stack={stack} />
-        </Html>
-      )}
     </group>
   );
 }
@@ -397,6 +426,7 @@ function TableModel({
   chipGeometry,
   seatDelay,
   dealKey,
+  labelScale,
 }: {
   plan: ChipPlan;
   players: number;
@@ -405,6 +435,7 @@ function TableModel({
   chipGeometry: THREE.CylinderGeometry;
   seatDelay: number;
   dealKey: number;
+  labelScale: number;
 }) {
   const group = useRef<THREE.Group>(null);
   const intro = useRef<number | null>(null);
@@ -478,6 +509,25 @@ function TableModel({
     [players],
   );
   const dealer = stadiumPoint(FELT_A, FELT_R - 0.52, 1 / players);
+
+  const labels = useMemo(
+    () => Array.from({ length: players }, (_, k) => makeSeatLabelTexture(`P${k + 1}`)),
+    [players],
+  );
+  useEffect(() => () => labels.forEach((texture) => texture.dispose()), [labels]);
+
+  const dealerMaterials = useMemo(() => {
+    const side = new THREE.MeshStandardMaterial({ color: "#f6f1e6", roughness: 0.35 });
+    const face = new THREE.MeshStandardMaterial({ map: makeDealerTexture(), roughness: 0.35 });
+    return [side, face, face];
+  }, []);
+  useEffect(
+    () => () => {
+      dealerMaterials[1].map?.dispose();
+      dealerMaterials.forEach((material) => material.dispose());
+    },
+    [dealerMaterials],
+  );
 
   useFrame(({ clock }) => {
     if (!group.current) return;
@@ -554,21 +604,25 @@ function TableModel({
             })}
           </group>
 
-          <Html position={[seat.label.x, 0.34, seat.label.z]} center zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
-            <div className="seat-pill">P{k + 1}</div>
-          </Html>
+          <sprite
+            position={[seat.label.x, 0.5, seat.label.z]}
+            scale={[0.46 * labelScale, 0.23 * labelScale, 1]}
+            renderOrder={5}
+          >
+            <spriteMaterial map={labels[k]} transparent depthWrite={false} />
+          </sprite>
         </group>
       ))}
 
-      <group position={[dealer.x, 0.02, dealer.z]}>
-        <mesh castShadow receiveShadow>
-          <cylinderGeometry args={[0.13, 0.13, 0.035, 40]} />
-          <meshStandardMaterial color="#f6f1e6" roughness={0.35} />
-        </mesh>
-        <Html position={[0, 0.03, 0]} center transform rotation={[-Math.PI / 2, 0, 0]} scale={0.1} style={{ pointerEvents: "none" }}>
-          <span className="text-[11px] font-extrabold tracking-[0.12em] text-ink">D</span>
-        </Html>
-      </group>
+      <mesh
+        position={[dealer.x, 0.02, dealer.z]}
+        rotation={[0, Math.PI / 2, 0]}
+        material={dealerMaterials}
+        castShadow
+        receiveShadow
+      >
+        <cylinderGeometry args={[0.15, 0.15, 0.035, 48]} />
+      </mesh>
     </group>
   );
 }
@@ -596,7 +650,35 @@ function CameraRig({ distance, fov }: { distance: number; fov: number }) {
   return null;
 }
 
-function SceneContents({ plan, players, dealKey, activeIndex, onActiveChange }: PokerSceneProps) {
+function TooltipTracker({
+  anchor,
+  tooltipRef,
+}: {
+  anchor: [number, number, number] | null;
+  tooltipRef: RefObject<HTMLDivElement | null>;
+}) {
+  const projected = useRef(new THREE.Vector3());
+
+  useFrame(({ camera, size }) => {
+    const element = tooltipRef.current;
+    if (!element || !anchor) return;
+    const point = projected.current.set(...anchor).project(camera);
+    const x = ((point.x + 1) / 2) * size.width;
+    const y = ((1 - point.y) / 2) * size.height;
+    element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  });
+
+  return null;
+}
+
+function SceneContents({
+  plan,
+  players,
+  dealKey,
+  activeIndex,
+  onActiveChange,
+  tooltipRef,
+}: PokerSceneProps & { tooltipRef: RefObject<HTMLDivElement | null> }) {
   const size = useThree((state) => state.size);
   const aspect = size.width / Math.max(size.height, 1);
   const portrait = aspect < 0.9;
@@ -610,7 +692,19 @@ function SceneContents({ plan, players, dealKey, activeIndex, onActiveChange }: 
   const chipGeometry = useMemo(() => new THREE.CylinderGeometry(CHIP_R, CHIP_R, CHIP_H, 48), []);
   useEffect(() => () => chipGeometry.dispose(), [chipGeometry]);
 
-  const heroSpacing = portrait ? 0.47 : 0.6;
+  const heroCount = plan.stacks.length;
+  const heroCols = portrait && heroCount > 3 ? Math.ceil(heroCount / 2) : heroCount;
+  const heroRows = Math.ceil(heroCount / heroCols);
+  const heroSpacing = portrait ? 0.5 : 0.6;
+  const heroPosition = (i: number): [number, number] => {
+    const col = i % heroCols;
+    const row = Math.floor(i / heroCols);
+    const rowCount = row === heroRows - 1 ? heroCount - row * heroCols : heroCols;
+    return [
+      (col - (rowCount - 1) / 2) * heroSpacing,
+      (portrait ? 0 : 0.18) + (row - (heroRows - 1) / 2) * 0.58,
+    ];
+  };
   const heroStart = 1.0;
   const heroStep = 0.24;
   const seatDelay = heroStart + plan.stacks.length * heroStep + 0.7;
@@ -645,6 +739,7 @@ function SceneContents({ plan, players, dealKey, activeIndex, onActiveChange }: 
         chipGeometry={chipGeometry}
         seatDelay={seatDelay}
         dealKey={dealKey}
+        labelScale={portrait ? 1.7 : 1}
       />
 
       <group key={`hero-${dealKey}`}>
@@ -656,7 +751,7 @@ function SceneContents({ plan, players, dealKey, activeIndex, onActiveChange }: 
             geometry={chipGeometry}
             visibleCount={Math.min(stack.count, MAX_HERO_CHIPS)}
             delay={heroStart + i * heroStep}
-            position={[(i - (plan.stacks.length - 1) / 2) * heroSpacing, 0.004, portrait ? 0 : 0.18]}
+            position={[heroPosition(i)[0], 0.004, heroPosition(i)[1]]}
             seed={i * 101}
             interactive
             active={activeIndex === i}
@@ -665,6 +760,19 @@ function SceneContents({ plan, players, dealKey, activeIndex, onActiveChange }: 
           />
         ))}
       </group>
+
+      <TooltipTracker
+        anchor={
+          activeIndex === null || !plan.stacks[activeIndex]
+            ? null
+            : [
+                heroPosition(activeIndex)[0],
+                Math.min(plan.stacks[activeIndex].count, MAX_HERO_CHIPS) * (CHIP_H + 0.024) + 0.3,
+                heroPosition(activeIndex)[1],
+              ]
+        }
+        tooltipRef={tooltipRef}
+      />
 
       <ContactShadows position={[0, -1.42, 0]} scale={14} blur={2.6} opacity={0.42} far={3} resolution={512} color="#2a1d14" />
       <OrbitControls
@@ -685,16 +793,33 @@ function SceneContents({ plan, players, dealKey, activeIndex, onActiveChange }: 
 }
 
 export default function PokerScene(props: PokerSceneProps) {
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const activeStack = props.activeIndex === null ? undefined : props.plan.stacks[props.activeIndex];
+
   return (
-    <Canvas
-      shadows
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
-      camera={{ fov: 34, near: 0.1, far: 80, position: [0, 6, 5.2] }}
-      onPointerMissed={() => props.onActiveChange(null)}
-      className="touch-none"
-    >
-      <SceneContents {...props} />
-    </Canvas>
+    <div className="relative h-full w-full">
+      <Canvas
+        shadows="percentage"
+        dpr={[1, 2]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        camera={{ fov: 34, near: 0.1, far: 80, position: [0, 6, 5.2] }}
+        onPointerMissed={() => props.onActiveChange(null)}
+        className="touch-none"
+      >
+        <SceneContents {...props} tooltipRef={tooltipRef} />
+      </Canvas>
+
+      <div
+        ref={tooltipRef}
+        className="pointer-events-none absolute left-0 top-0 z-10"
+        style={{ transform: "translate3d(-9999px, -9999px, 0)" }}
+      >
+        <div className="-translate-x-1/2 -translate-y-full pb-2">
+          <AnimatePresence mode="wait">
+            {activeStack && <ChipTooltip key={props.activeIndex} stack={activeStack} />}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
   );
 }
