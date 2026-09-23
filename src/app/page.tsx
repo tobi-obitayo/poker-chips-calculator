@@ -339,7 +339,7 @@ export default function Home() {
 
               <div className="mt-8 grid grid-cols-3 gap-2 rounded-2xl bg-paper/[0.045] p-4">
                 <div>
-                  <p className="summary-label">In play</p>
+                  <p className="summary-label">Chips dealt</p>
                   <p className="summary-value">{plan.chipsUsed}</p>
                 </div>
                 <div className="border-x border-paper/8 px-3">
