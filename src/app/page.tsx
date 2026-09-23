@@ -202,7 +202,9 @@ export default function Home() {
                 max={6}
                 step={1}
                 value={[draft.colors]}
-                onValueChange={(value) => update("colors", value[0])}
+                onValueChange={(value) =>
+                  update("colors", Array.isArray(value) ? value[0] : value)
+                }
                 className="[&_[data-slot=slider-range]]:bg-coral [&_[data-slot=slider-thumb]]:border-coral"
               />
               <div className="mt-2 flex justify-between px-0.5 text-[10px] font-semibold text-ink/30">
