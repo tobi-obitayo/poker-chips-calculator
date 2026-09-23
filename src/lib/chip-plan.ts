@@ -7,12 +7,21 @@ export type PlanInput = {
   combineColors: boolean;
 };
 
+export type ChipColor = {
+  name: string;
+  hex: string;
+  ink: "light" | "dark";
+};
+
 export type ChipStack = {
   value: number;
   count: number;
   colors: string[];
   colorHex: string;
   ink: "light" | "dark";
+  palette: ChipColor[];
+  chipShare: number;
+  valueShare: number;
 };
 
 export type ChipPlan = {
@@ -27,13 +36,13 @@ export type ChipPlan = {
   isExact: boolean;
 };
 
-const CHIP_COLORS = [
-  { name: "Ivory", hex: "#f3ead3", ink: "dark" as const },
-  { name: "Coral", hex: "#e85d4a", ink: "light" as const },
-  { name: "Ocean", hex: "#2f6d91", ink: "light" as const },
-  { name: "Sage", hex: "#63886c", ink: "light" as const },
-  { name: "Ink", hex: "#252927", ink: "light" as const },
-  { name: "Plum", hex: "#7c537d", ink: "light" as const },
+export const CHIP_COLORS: ChipColor[] = [
+  { name: "Ivory", hex: "#f1e8d2", ink: "dark" },
+  { name: "Coral", hex: "#d9533f", ink: "light" },
+  { name: "Ocean", hex: "#2c6690", ink: "light" },
+  { name: "Sage", hex: "#8fb596", ink: "dark" },
+  { name: "Ink", hex: "#26292a", ink: "light" },
+  { name: "Plum", hex: "#7a4f80", ink: "light" },
 ];
 
 const NICE_VALUES = [
@@ -177,7 +186,7 @@ export function makeChipPlan(raw: PlanInput): ChipPlan {
     ? cleanPlan(chipsPerPlayer, denominations, buyInCents)
     : exactPlan(chipsPerPlayer, denominations, buyInCents);
 
-  const colorGroups: (typeof CHIP_COLORS)[] = Array.from(
+  const colorGroups: ChipColor[][] = Array.from(
     { length: denominations },
     () => [],
   );
@@ -185,13 +194,22 @@ export function makeChipPlan(raw: PlanInput): ChipPlan {
     colorGroups[Math.min(index, denominations - 1)].push(color);
   });
 
-  const stacks = solution.values.map((value, index) => ({
-    value: value / 100,
-    count: solution.counts[index],
-    colors: colorGroups[index].map((color) => color.name),
-    colorHex: colorGroups[index][0]?.hex ?? CHIP_COLORS[index].hex,
-    ink: colorGroups[index][0]?.ink ?? "dark",
-  }));
+  const stacks = solution.values.map((value, index) => {
+    const palette = colorGroups[index].length
+      ? colorGroups[index]
+      : [CHIP_COLORS[index % CHIP_COLORS.length]];
+    const count = solution.counts[index];
+    return {
+      value: value / 100,
+      count,
+      colors: palette.map((color) => color.name),
+      colorHex: palette[0].hex,
+      ink: palette[0].ink,
+      palette,
+      chipShare: count / chipsPerPlayer,
+      valueShare: (value * count) / solution.total,
+    };
+  });
   const valuePerPlayer = solution.total / 100;
   const smallest = stacks[0]?.value ?? 0.01;
 
