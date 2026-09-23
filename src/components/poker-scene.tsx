@@ -685,7 +685,7 @@ function SceneContents({
   const fov = portrait ? 44 : 34;
   const halfFov = Math.tan(THREE.MathUtils.degToRad(fov / 2));
   const distance = portrait
-    ? Math.max(9, 2.9 / (halfFov * aspect))
+    ? Math.max(9, 3.2 / (halfFov * aspect))
     : Math.max(7.8, 4.7 / (halfFov * aspect));
 
   const materials = useChipMaterials(plan.stacks);
