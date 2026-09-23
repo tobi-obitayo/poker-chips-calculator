@@ -16,7 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { formatMoney, makeChipPlan, type PlanInput } from "@/lib/chip-plan";
+import {
+  formatMoney,
+  makeChipPlan,
+  type ChipPlan,
+  type PlanInput,
+} from "@/lib/chip-plan";
 
 const DEFAULTS: PlanInput = {
   players: 4,
@@ -87,6 +92,93 @@ function SettingToggle({
         <p className="text-sm font-semibold text-ink">{title}</p>
         <p className="mt-1 text-xs leading-relaxed text-ink/50">{detail}</p>
       </div>
+    </div>
+  );
+}
+
+function MathStep({
+  number,
+  label,
+  equation,
+  detail,
+}: {
+  number: string;
+  label: string;
+  equation: string;
+  detail: string;
+}) {
+  return (
+    <div className="math-step rounded-2xl border border-ink/10 bg-paper/80 p-4 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-coral">
+          {number} · {label}
+        </span>
+        <span className="size-1.5 rounded-full bg-sage" />
+      </div>
+      <p className="mt-3 font-display text-lg font-semibold tracking-[-0.03em]">{equation}</p>
+      <p className="mt-1 text-[10px] leading-relaxed text-ink/45">{detail}</p>
+    </div>
+  );
+}
+
+function PerspectiveTable({
+  plan,
+  players,
+  dealKey,
+}: {
+  plan: ChipPlan;
+  players: number;
+  dealKey: number;
+}) {
+  const visiblePlayers = Math.min(players, 6);
+
+  return (
+    <div className="table-scene">
+      <div className="table-shadow" />
+      <div className="poker-table">
+        <div className="felt-grid" />
+        <div className="table-mark">
+          <span>STACKED</span>
+          <small>{formatMoney(plan.valuePerPlayer)} / PLAYER</small>
+        </div>
+
+        <div key={dealKey} className="chip-tray" aria-label="Animated chip stacks">
+          {plan.stacks.map((stack, stackIndex) => (
+            <div
+              className="table-stack"
+              key={`${stack.value}-${stackIndex}`}
+              style={{ animationDelay: `${420 + stackIndex * 150}ms` }}
+            >
+              <div className="chip-column">
+                {Array.from({ length: Math.min(stack.count, 7) }, (_, chipIndex) => (
+                  <span
+                    key={chipIndex}
+                    className="table-chip"
+                    style={{
+                      backgroundColor: stack.colorHex,
+                      color: stack.ink === "light" ? "#fffaf0" : "#272b28",
+                      bottom: `${chipIndex * 4}px`,
+                    }}
+                  >
+                    {chipIndex === Math.min(stack.count, 7) - 1 && formatMoney(stack.value)}
+                  </span>
+                ))}
+              </div>
+              <small>×{stack.count}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {Array.from({ length: visiblePlayers }, (_, index) => (
+        <div key={index} className={`player-seat seat-${index + 1}`}>
+          <span className="player-dot">{index + 1}</span>
+          <span className="player-label">Player {index + 1}</span>
+        </div>
+      ))}
+      {players > visiblePlayers && (
+        <div className="more-players">+{players - visiblePlayers} more</div>
+      )}
     </div>
   );
 }
@@ -237,19 +329,17 @@ export default function Home() {
             </Button>
           </section>
 
-          <section className="relative overflow-hidden rounded-[28px] bg-ink text-paper shadow-[0_30px_90px_rgba(34,38,34,0.18)]">
-            <div className="absolute -right-20 -top-20 size-64 rounded-full border border-paper/5" />
-            <div className="absolute -right-8 -top-8 size-40 rounded-full border border-paper/5" />
-            <div className="relative p-5 sm:p-8">
+          <section className="relative overflow-hidden rounded-[28px] border border-ink/10 bg-[#d9d1c0] shadow-[0_30px_90px_rgba(34,38,34,0.14)]">
+            <div className="relative p-5 sm:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="eyebrow text-paper/40">02 / Tonight&apos;s stack</p>
+                  <p className="eyebrow">02 / Watch the math</p>
                   <div className="mt-3 flex items-center gap-2">
                     <span className="grid size-5 place-items-center rounded-full bg-sage text-white">
                       <Check className="size-3" strokeWidth={3} />
                     </span>
-                    <span className="text-xs font-semibold text-paper/70">
-                      {plan.isExact ? "Exact buy-in" : "Clean values, closest fit"}
+                    <span className="text-xs font-semibold text-ink/60">
+                      {plan.isExact ? "Exact buy-in found" : "Cleanest close match"}
                     </span>
                   </div>
                 </div>
@@ -260,107 +350,126 @@ export default function Home() {
                     setSubmitted(DEFAULTS);
                     setDealKey((key) => key + 1);
                   }}
-                  className="rounded-full border border-paper/10 p-2 text-paper/40 transition hover:border-paper/25 hover:text-paper"
+                  className="rounded-full border border-ink/10 bg-paper/40 p-2 text-ink/45 transition hover:bg-paper hover:text-ink"
                   aria-label="Reset calculator"
                 >
                   <RotateCcw className="size-4" />
                 </button>
               </div>
 
-              <div className="mt-8 flex flex-col justify-between gap-8 border-b border-paper/10 pb-8 sm:flex-row sm:items-end">
-                <div>
-                  <p className="text-xs font-medium text-paper/40">Each player gets</p>
-                  <p className="mt-1 font-display text-5xl font-semibold tracking-[-0.04em]">
-                    {formatMoney(plan.valuePerPlayer)}
-                  </p>
-                  <p className="mt-2 text-xs text-paper/40">
-                    {plan.chipsPerPlayer} chips per stack
-                    {!plan.isExact && (
-                      <span className="ml-2 text-gold">
-                        {plan.difference > 0 ? "+" : "−"}
-                        {formatMoney(Math.abs(plan.difference))} vs target
-                      </span>
-                    )}
-                  </p>
+              <div key={`math-${dealKey}`} className="math-sequence mt-6 grid gap-2 sm:grid-cols-3">
+                <MathStep
+                  number="1"
+                  label="Divide"
+                  equation={`${submitted.totalChips} ÷ ${submitted.players} = ${plan.chipsPerPlayer}`}
+                  detail="Physical chips available per player."
+                />
+                <MathStep
+                  number="2"
+                  label="Weight"
+                  equation="45% → 27% → 16%"
+                  detail="More small chips, progressively fewer large ones."
+                />
+                <MathStep
+                  number="3"
+                  label="Price"
+                  equation={`${plan.chipsPerPlayer} chips = ${formatMoney(plan.valuePerPlayer)}`}
+                  detail={plan.isExact ? "Values land exactly on your buy-in." : "Values favor clean, playable amounts."}
+                />
+              </div>
+
+              <div key={`table-${dealKey}`} className="mt-4">
+                <PerspectiveTable
+                  plan={plan}
+                  players={submitted.players}
+                  dealKey={dealKey}
+                />
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <div className="grid grid-cols-3 rounded-2xl border border-ink/10 bg-paper/70 p-4">
+                  <div>
+                    <p className="table-summary-label">Each player</p>
+                    <p className="table-summary-value">{formatMoney(plan.valuePerPlayer)}</p>
+                  </div>
+                  <div className="border-x border-ink/10 px-3">
+                    <p className="table-summary-label">Chips / player</p>
+                    <p className="table-summary-value">{plan.chipsPerPlayer}</p>
+                  </div>
+                  <div className="pl-3">
+                    <p className="table-summary-label">Reserve</p>
+                    <p className="table-summary-value">{plan.chipsLeft}</p>
+                  </div>
                 </div>
-                <div className="rounded-xl border border-paper/10 bg-paper/5 px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-paper/35">
-                    Start blinds at
-                  </p>
-                  <p className="mt-1 font-display text-lg font-semibold">
+                <div className="rounded-2xl bg-ink px-5 py-4 text-paper">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-paper/40">Start blinds</p>
+                  <p className="mt-1 whitespace-nowrap font-display text-lg font-semibold">
                     {formatMoney(plan.smallBlind)} / {formatMoney(plan.bigBlind)}
                   </p>
                 </div>
               </div>
 
-              <div key={dealKey} className="deal-in mt-8">
-                <div className="mb-4 grid grid-cols-[1fr_auto_auto] gap-4 px-1 text-[10px] font-bold uppercase tracking-[0.16em] text-paper/30">
-                  <span>Chip value</span>
-                  <span>Quantity</span>
-                  <span className="w-16 text-right">Subtotal</span>
-                </div>
-                <div className="space-y-2.5">
-                  {plan.stacks.map((stack, index) => (
-                    <div
-                      key={`${stack.value}-${index}`}
-                      className="stack-row grid grid-cols-[1fr_auto_auto] items-center gap-4 rounded-2xl border border-paper/8 bg-paper/[0.045] p-3.5"
-                      style={{ animationDelay: `${index * 90}ms` }}
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div
-                          className="chip relative grid size-11 shrink-0 place-items-center rounded-full font-display text-[10px] font-bold shadow-lg"
-                          style={{
-                            backgroundColor: stack.colorHex,
-                            color: stack.ink === "light" ? "#fffaf0" : "#272b28",
-                          }}
-                        >
-                          <span className="absolute inset-[4px] rounded-full border border-dashed border-current opacity-50" />
-                          <span className="relative">{formatMoney(stack.value)}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-display text-base font-semibold">
-                            {formatMoney(stack.value)}
-                          </p>
-                          <p className="truncate text-[11px] text-paper/35">
-                            {stack.colors.join(" + ")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-paper/8 px-3 py-1.5 font-display text-sm font-semibold">
-                        × {stack.count}
-                      </div>
-                      <p className="w-16 text-right font-display text-sm text-paper/65">
-                        {formatMoney(stack.value * stack.count)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-8 grid grid-cols-3 gap-2 rounded-2xl bg-paper/[0.045] p-4">
-                <div>
-                  <p className="summary-label">Chips dealt</p>
-                  <p className="summary-value">{plan.chipsUsed}</p>
-                </div>
-                <div className="border-x border-paper/8 px-3">
-                  <p className="summary-label">Reserve</p>
-                  <p className="summary-value">{plan.chipsLeft}</p>
-                </div>
-                <div className="pl-2">
-                  <p className="summary-label">Table value</p>
-                  <p className="summary-value">{formatMoney(plan.valuePerPlayer * submitted.players)}</p>
-                </div>
+              <div className="mt-3 overflow-hidden rounded-2xl border border-ink/10 bg-paper/70">
+                {plan.stacks.map((stack, index) => (
+                  <div
+                    key={`${stack.value}-legend-${index}`}
+                    className="flex items-center gap-3 border-b border-ink/8 px-4 py-2.5 last:border-0"
+                  >
+                    <span className="mini-chip" style={{ backgroundColor: stack.colorHex }} />
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                      {stack.colors.join(" + ")}
+                    </span>
+                    <span className="text-xs text-ink/45">
+                      {formatMoney(stack.value)} × {stack.count}
+                    </span>
+                    <span className="w-14 text-right font-display text-xs font-semibold">
+                      {formatMoney(stack.value * stack.count)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="relative flex items-center gap-3 border-t border-paper/8 bg-black/10 px-5 py-4 sm:px-8">
-              <CircleDollarSign className="size-4 text-gold" />
-              <p className="text-[11px] leading-relaxed text-paper/40">
-                Tip: color matters more than what&apos;s printed. Agree on values before the first hand.
+            <div className="relative flex items-center gap-3 border-t border-ink/8 bg-paper/35 px-5 py-4 sm:px-7">
+              <CircleDollarSign className="size-4 text-coral" />
+              <p className="text-[11px] leading-relaxed text-ink/50">
+                The labels on your chips are optional—agree on tonight&apos;s color values before the first hand.
               </p>
             </div>
           </section>
         </div>
+
+        <section className="mt-16 rounded-[28px] border border-ink/10 bg-cream p-6 sm:p-9">
+          <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr]">
+            <div>
+              <p className="eyebrow">The walkthrough</p>
+              <h2 className="mt-3 font-display text-3xl font-semibold tracking-[-0.04em]">
+                What is the algorithm doing?
+              </h2>
+              <p className="mt-4 text-sm leading-6 text-ink/55">
+                It is not randomly assigning values. Every answer follows the same three rules so the
+                stacks stay fair, practical, and easy to count.
+              </p>
+            </div>
+            <ol className="grid gap-3 sm:grid-cols-3">
+              <li className="walkthrough-card">
+                <span>01</span>
+                <h3>Split fairly</h3>
+                <p>Divide all physical chips by the player count. Any remainder stays in the bank for rebuys.</p>
+              </li>
+              <li className="walkthrough-card">
+                <span>02</span>
+                <h3>Shape the stack</h3>
+                <p>Allocate about 45%, 27%, 16%, then 8% to ascending values, so small bets stay easy.</p>
+              </li>
+              <li className="walkthrough-card">
+                <span>03</span>
+                <h3>Fit the buy-in</h3>
+                <p>Try familiar values like 5¢, 10¢, 25¢, and 50¢, then swap counts until the total is closest.</p>
+              </li>
+            </ol>
+          </div>
+        </section>
       </section>
     </main>
   );

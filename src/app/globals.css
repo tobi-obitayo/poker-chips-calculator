@@ -113,6 +113,233 @@ input {
   animation: chip-settle 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.math-step {
+  opacity: 0;
+  animation: math-reveal 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.math-step:nth-child(2) {
+  animation-delay: 240ms;
+}
+
+.math-step:nth-child(3) {
+  animation-delay: 480ms;
+}
+
+.table-scene {
+  position: relative;
+  height: 370px;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 50% 20%, rgb(255 255 255 / 35%), transparent 45%),
+    #c9bfac;
+}
+
+.table-shadow {
+  position: absolute;
+  inset: 82px 12% 48px;
+  border-radius: 30%;
+  background: rgb(30 35 31 / 32%);
+  filter: blur(20px);
+  transform: translateY(30px);
+}
+
+.poker-table {
+  position: absolute;
+  inset: 64px 11% 62px;
+  overflow: hidden;
+  border: 10px solid #754b33;
+  border-radius: 1.2rem;
+  background: #315f4c;
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 10%),
+    inset 0 0 50px rgb(8 34 24 / 34%),
+    0 18px 25px rgb(44 31 24 / 24%);
+  transform: perspective(820px) rotateX(42deg);
+  transform-origin: center 72%;
+}
+
+.felt-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 38%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 38%) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.table-mark {
+  position: absolute;
+  left: 50%;
+  top: 37%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgb(247 243 233 / 26%);
+  transform: translate(-50%, -50%);
+}
+
+.table-mark span {
+  font-size: clamp(1.35rem, 3.2vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+}
+
+.table-mark small {
+  margin-top: 0.25rem;
+  font-size: 0.45rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.chip-tray {
+  position: absolute;
+  right: 6%;
+  bottom: 12%;
+  left: 6%;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: clamp(0.25rem, 1.5vw, 1rem);
+}
+
+.table-stack {
+  display: flex;
+  min-width: 42px;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  animation: stack-deal 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.table-stack small {
+  margin-top: 0.15rem;
+  color: rgb(247 243 233 / 68%);
+  font-size: 0.55rem;
+  font-weight: 750;
+}
+
+.chip-column {
+  position: relative;
+  width: 42px;
+  height: 47px;
+}
+
+.table-chip {
+  position: absolute;
+  left: 0;
+  display: grid;
+  width: 42px;
+  height: 15px;
+  place-items: center;
+  border: 2px dashed rgb(255 255 255 / 65%);
+  border-radius: 50%;
+  box-shadow:
+    0 2px 0 rgb(18 24 20 / 24%),
+    inset 0 0 0 2px rgb(0 0 0 / 10%);
+  font-size: 0.46rem;
+  font-weight: 800;
+}
+
+.player-seat {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgb(37 42 39 / 55%);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.player-dot {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid rgb(37 42 39 / 13%);
+  border-radius: 50%;
+  background: rgb(247 243 233 / 78%);
+  box-shadow: 0 4px 12px rgb(37 42 39 / 10%);
+  color: rgb(37 42 39 / 65%);
+}
+
+.seat-1 { top: 7%; left: 22%; }
+.seat-2 { top: 7%; right: 22%; }
+.seat-3 { top: 43%; right: 2%; flex-direction: column; }
+.seat-4 { right: 23%; bottom: 4%; flex-direction: column-reverse; }
+.seat-5 { bottom: 4%; left: 23%; flex-direction: column-reverse; }
+.seat-6 { top: 43%; left: 2%; flex-direction: column; }
+
+.more-players {
+  position: absolute;
+  right: 3%;
+  bottom: 3%;
+  color: rgb(37 42 39 / 40%);
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.table-summary-label {
+  font-size: 0.55rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(37 42 39 / 42%);
+}
+
+.table-summary-value {
+  margin-top: 0.25rem;
+  font-family: var(--font-geist-sans);
+  font-size: 0.95rem;
+  font-weight: 680;
+}
+
+.mini-chip {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: 2px dashed rgb(255 255 255 / 68%);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+}
+
+.walkthrough-card {
+  min-height: 190px;
+  border: 1px solid rgb(37 42 39 / 9%);
+  border-radius: 1rem;
+  background: rgb(247 243 233 / 58%);
+  padding: 1.25rem;
+}
+
+.walkthrough-card > span {
+  color: var(--coral);
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.walkthrough-card h3 {
+  margin-top: 2rem;
+  font-family: var(--font-geist-sans);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.walkthrough-card p {
+  margin-top: 0.65rem;
+  color: rgb(37 42 39 / 52%);
+  font-size: 0.72rem;
+  line-height: 1.6;
+}
+
 @keyframes deal-row {
   from {
     opacity: 0;
@@ -121,6 +348,34 @@ input {
   to {
     opacity: 1;
     transform: translateX(0) rotate(0);
+  }
+}
+
+@keyframes math-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes stack-deal {
+  0% {
+    opacity: 0;
+    transform: translate(-130px, -65px) scale(0.65) rotate(-14deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(4px, 2px) scale(1.03) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0) scale(1) rotate(0);
   }
 }
 
@@ -138,8 +393,43 @@ input {
 
 @media (prefers-reduced-motion: reduce) {
   .stack-row,
-  .chip {
+  .chip,
+  .math-step,
+  .table-stack {
     animation: none;
     opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .table-scene {
+    height: 310px;
+  }
+
+  .poker-table {
+    inset: 62px 8% 57px;
+    border-width: 7px;
+  }
+
+  .player-label {
+    display: none;
+  }
+
+  .seat-1 { left: 18%; }
+  .seat-2 { right: 18%; }
+  .seat-4 { right: 20%; }
+  .seat-5 { left: 20%; }
+
+  .chip-tray {
+    gap: 0.15rem;
+  }
+
+  .chip-column,
+  .table-chip {
+    width: 34px;
+  }
+
+  .table-stack {
+    min-width: 34px;
   }
 }
