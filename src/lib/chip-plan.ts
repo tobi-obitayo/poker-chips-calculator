@@ -5,6 +5,7 @@ export type PlanInput = {
   colors: number;
   allowClose: boolean;
   combineColors: boolean;
+  palette?: ChipColor[];
 };
 
 export type ChipColor = {
@@ -43,6 +44,21 @@ export const CHIP_COLORS: ChipColor[] = [
   { name: "Sage", hex: "#8fb596", ink: "dark" },
   { name: "Ink", hex: "#26292a", ink: "light" },
   { name: "Plum", hex: "#7a4f80", ink: "light" },
+];
+
+export const BASIC_COLORS: ChipColor[] = [
+  { name: "White", hex: "#f4f1ea", ink: "dark" },
+  { name: "Red", hex: "#cf3a2f", ink: "light" },
+  { name: "Blue", hex: "#2459a8", ink: "light" },
+  { name: "Green", hex: "#2f8a4e", ink: "light" },
+  { name: "Black", hex: "#1f2222", ink: "light" },
+  { name: "Yellow", hex: "#e9bb25", ink: "dark" },
+  { name: "Orange", hex: "#e8742a", ink: "dark" },
+  { name: "Purple", hex: "#6e3f9e", ink: "light" },
+  { name: "Pink", hex: "#e883ab", ink: "dark" },
+  { name: "Light blue", hex: "#72b6de", ink: "dark" },
+  { name: "Gray", hex: "#8b908d", ink: "light" },
+  { name: "Brown", hex: "#7a4a2c", ink: "light" },
 ];
 
 const NICE_VALUES = [
@@ -200,14 +216,15 @@ export function makeChipPlan(raw: PlanInput): ChipPlan {
     { length: denominations },
     () => [],
   );
-  CHIP_COLORS.slice(0, availableColors).forEach((color, index) => {
+  const chipColors = raw.palette?.length === CHIP_COLORS.length ? raw.palette : CHIP_COLORS;
+  chipColors.slice(0, availableColors).forEach((color, index) => {
     colorGroups[Math.min(index, denominations - 1)].push(color);
   });
 
   const stacks = solution.values.map((value, index) => {
     const palette = colorGroups[index].length
       ? colorGroups[index]
-      : [CHIP_COLORS[index % CHIP_COLORS.length]];
+      : [chipColors[index % chipColors.length]];
     const count = solution.counts[index];
     return {
       value: value / 100,

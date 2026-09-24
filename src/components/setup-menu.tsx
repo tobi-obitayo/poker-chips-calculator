@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { ArrowRight, X } from "lucide-react";
 import { AnimatedNumber } from "@/components/animated-number";
 import { ChipColorSlider, GlassStepper, GlowToggle } from "@/components/setup-controls";
-import { formatMoney, makeChipPlan, type PlanInput } from "@/lib/chip-plan";
+import { CHIP_COLORS, formatMoney, makeChipPlan, type PlanInput } from "@/lib/chip-plan";
 
 export function SetupMenu({
   value,
@@ -95,7 +95,12 @@ export function SetupMenu({
       </div>
 
       <div className="relative mt-2.5">
-        <ChipColorSlider value={value.colors} onChange={(next) => update("colors", next)} />
+        <ChipColorSlider
+          value={value.colors}
+          onChange={(next) => update("colors", next)}
+          palette={value.palette ?? CHIP_COLORS}
+          onPaletteChange={(next) => update("palette", next)}
+        />
       </div>
 
       <div className="relative mt-2.5 grid gap-2.5 sm:grid-cols-2">

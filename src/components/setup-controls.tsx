@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { motion } from "motion/react";
-import { Minus, Plus } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { Check, Minus, Plus } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { CHIP_COLORS } from "@/lib/chip-plan";
+import { BASIC_COLORS, CHIP_COLORS, type ChipColor } from "@/lib/chip-plan";
 
 type StepperProps = {
   label: string;
@@ -120,45 +120,135 @@ export function GlassStepper({
 export function ChipColorSlider({
   value,
   onChange,
+  palette,
+  onPaletteChange,
 }: {
   value: number;
   onChange: (value: number) => void;
+  palette: ChipColor[];
+  onPaletteChange: (palette: ChipColor[]) => void;
 }) {
+  const [editing, setEditing] = useState<number | null>(null);
+  const editingSlot = editing !== null && editing < value ? editing : null;
+  const isDefault = palette.every((color, i) => color.hex === CHIP_COLORS[i].hex);
+
+  function pick(color: ChipColor) {
+    if (editingSlot === null) return;
+    onPaletteChange(palette.map((current, i) => (i === editingSlot ? color : current)));
+    setEditing(null);
+  }
+
   return (
     <div className="glass-well rounded-2xl p-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-3">
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink/45">
           Chip colors in your case
         </p>
         <p className="text-sm font-semibold text-ink tabular-nums">{value} colors</p>
       </div>
+      <p className="mt-1 text-[11px] text-ink/45">Tap a chip to match the colors you actually have.</p>
 
-      <div className="mt-4 grid grid-cols-6 gap-1.5">
-        {CHIP_COLORS.map((color, index) => {
+      <div className="mt-3 grid grid-cols-6 gap-1.5">
+        {palette.map((color, index) => {
           const active = index < value;
-          const selectable = index >= 1;
+          const selected = editingSlot === index;
           return (
             <motion.button
-              key={color.name}
+              key={index}
               type="button"
-              disabled={!selectable}
-              onClick={() => onChange(index + 1)}
+              onClick={() => {
+                if (!active) onChange(Math.max(2, index + 1));
+                setEditing(selected ? null : index);
+              }}
               animate={{
-                y: active ? 0 : 4,
+                y: selected ? -4 : active ? 0 : 4,
                 opacity: active ? 1 : 0.32,
                 scale: active ? 1 : 0.86,
               }}
-              whileHover={selectable ? { y: -3 } : undefined}
+              whileHover={{ y: selected ? -4 : -3 }}
               transition={{ type: "spring", stiffness: 380, damping: 22 }}
-              className="flex flex-col items-center gap-1.5 disabled:cursor-default"
-              aria-label={selectable ? `Use ${index + 1} chip colors` : `${color.name} chip`}
+              className="flex flex-col items-center gap-1.5"
+              aria-label={`Change color of chip ${index + 1} (${color.name})`}
+              aria-expanded={selected}
             >
-              <span className="ui-chip" style={{ "--chip": color.hex } as CSSProperties} />
-              <span className="text-[9px] font-medium text-ink/50">{color.name}</span>
+              <span
+                className={`ui-chip rounded-full ${selected ? "ring-2 ring-ink ring-offset-2 ring-offset-white/60" : ""}`}
+                style={{ "--chip": color.hex } as CSSProperties}
+              />
+              <span className="max-w-full truncate text-[9px] font-medium text-ink/55">{color.name}</span>
             </motion.button>
           );
         })}
       </div>
+
+      <AnimatePresence initial={false}>
+        {editingSlot !== null && (
+          <motion.div
+            key="swatches"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 rounded-xl bg-white/55 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink/45">
+                Chip {editingSlot + 1} color
+              </p>
+              <div className="mt-2 grid grid-cols-6 gap-2">
+                {BASIC_COLORS.map((color) => {
+                  const current = palette[editingSlot].hex === color.hex;
+                  const takenBy = palette.findIndex(
+                    (other, i) => i !== editingSlot && i < value && other.hex === color.hex,
+                  );
+                  return (
+                    <button
+                      key={color.hex}
+                      type="button"
+                      disabled={takenBy !== -1}
+                      onClick={() => pick(color)}
+                      title={takenBy !== -1 ? `${color.name} is already chip ${takenBy + 1}` : color.name}
+                      aria-label={`${color.name}${takenBy !== -1 ? ", already used" : ""}`}
+                      className="group flex flex-col items-center gap-1 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <span
+                        className={`grid size-8 place-items-center rounded-full border border-black/10 shadow-sm transition group-enabled:group-hover:scale-110 ${
+                          current ? "ring-2 ring-ink ring-offset-2" : ""
+                        }`}
+                        style={{ backgroundColor: color.hex }}
+                      >
+                        {current && (
+                          <Check className={`size-3.5 ${color.ink === "dark" ? "text-ink" : "text-white"}`} />
+                        )}
+                      </span>
+                      <span className="text-[9px] font-medium text-ink/55">{color.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {new Set(palette.slice(0, value).map((color) => color.hex)).size < value && (
+        <p className="mt-2 text-[11px] font-medium text-coral">
+          Two chips share a color. Tap one to change it so values stay easy to tell apart.
+        </p>
+      )}
+
+      {!isDefault && (
+        <button
+          type="button"
+          onClick={() => {
+            onPaletteChange(CHIP_COLORS);
+            setEditing(null);
+          }}
+          className="mt-2 text-[11px] font-medium text-ink/50 underline-offset-2 hover:text-ink hover:underline"
+        >
+          Reset to default colors
+        </button>
+      )}
 
       <Slider
         min={2}

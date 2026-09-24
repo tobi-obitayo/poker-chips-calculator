@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CircleHelp, SlidersHorizontal } from "lucide-react";
+import { Calculator, CircleHelp, SlidersHorizontal } from "lucide-react";
 import { SetupMenu } from "@/components/setup-menu";
 import { TableStage } from "@/components/table-stage";
 import { ChipDock, HelpDialog, MetricCards } from "@/components/table-hud";
@@ -36,6 +36,7 @@ export default function Home() {
   const [dealKey, setDealKey] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [showMath, setShowMath] = useState(true);
 
   const plan = useMemo(() => (submitted ? makeChipPlan(submitted) : null), [submitted]);
   const hasTable = Boolean(submitted && plan);
@@ -89,6 +90,18 @@ export default function Home() {
             >
               <button
                 type="button"
+                onClick={() => setShowMath((show) => !show)}
+                aria-pressed={showMath}
+                aria-label={showMath ? "Hide the math" : "Show the math"}
+                className={`flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition sm:px-4 ${
+                  showMath ? "bg-ink text-paper shadow-lg shadow-ink/20" : "liquid-glass text-ink/80 hover:text-ink"
+                }`}
+              >
+                <Calculator className="size-4" />
+                <span className="hidden sm:inline">Math</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setHelpOpen(true)}
                 aria-label="How the stacks are calculated"
                 className="liquid-glass grid size-10 place-items-center rounded-full text-ink/65 transition hover:text-ink"
@@ -115,8 +128,18 @@ export default function Home() {
             className="pointer-events-none absolute inset-0 z-20 flex flex-col justify-between pb-4 pt-20 sm:pb-6 sm:pt-24"
             exit={{ opacity: 0 }}
           >
-            <div className="pointer-events-auto">
-              <MetricCards plan={plan} input={submitted} />
+            <div className="min-h-px">
+              <AnimatePresence>
+                {showMath && (
+                  <motion.div
+                    key="math"
+                    className="pointer-events-auto"
+                    exit={{ opacity: 0, y: -18, filter: "blur(8px)", transition: { duration: 0.25 } }}
+                  >
+                    <MetricCards plan={plan} input={submitted} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div className="flex flex-col items-center gap-3 px-4">
               <motion.p

@@ -323,7 +323,7 @@ input {
 }
 
 .glass-slider [data-slot="slider-range"] {
-  background: linear-gradient(90deg, #d9533f, #2c6690, #8fb596, #7a4f80);
+  background: var(--ink);
 }
 
 .glass-slider [data-slot="slider-thumb"] {
@@ -333,7 +333,7 @@ input {
   background: #fff;
   box-shadow:
     0 4px 12px rgb(0 0 0 / 0.2),
-    0 0 0 4px rgb(16 185 129 / 0.12);
+    0 0 0 4px rgb(35 40 38 / 0.08);
   transition: box-shadow 150ms;
 }
 
@@ -341,7 +341,7 @@ input {
 .glass-slider [data-slot="slider-thumb"]:focus-visible {
   box-shadow:
     0 4px 12px rgb(0 0 0 / 0.2),
-    0 0 0 6px rgb(16 185 129 / 0.22);
+    0 0 0 6px rgb(35 40 38 / 0.14);
 }
 
 .no-scrollbar {
